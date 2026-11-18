@@ -1,0 +1,14 @@
+# runtime output written by the containers
+*/results/*
+!*/results/.gitkeep
+
+# python
+__pycache__/
+*.pyc
+
+# editor / OS
+.DS_Store
+*.swp
+
+# stray git identity from container build
+.gitconfig

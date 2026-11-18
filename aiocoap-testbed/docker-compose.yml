@@ -1,0 +1,43 @@
+# Closed, isolated lab for CoAP amplification measurement.
+# `internal: true` gives the bridge NO route to the internet — containment by design.
+services:
+  reflector:
+    build: .
+    image: coaplab
+    command: ["python3", "reflector.py"]
+    environment:
+      QUOTE_SIZE: "${QUOTE_SIZE:-1000}"
+      OBS_INTERVAL: "${OBS_INTERVAL:-0.2}"
+      OBS_COUNT: "${OBS_COUNT:-50}"
+      OBS_SIZE: "${OBS_SIZE:-200}"
+    cap_add: ["NET_RAW"]
+    networks: [coaplab]        # scale with: docker compose up -d --scale reflector=N
+
+  victim:
+    image: coaplab
+    command: ["python3", "victim.py"]
+    volumes: ["./results:/results"]
+    networks:
+      coaplab:
+        ipv4_address: 10.80.0.250
+
+  attacker:
+    image: coaplab
+    command: ["sleep", "infinity"]   # exec attacker.py on demand
+    cap_add: ["NET_RAW"]
+    environment:
+      VICTIM_IP: "10.80.0.250"
+      VICTIM_PORT: "5683"
+      REFLECTORS: "reflector"
+    volumes: ["./results:/results"]
+    networks:
+      coaplab:
+        ipv4_address: 10.80.0.251
+
+networks:
+  coaplab:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 10.80.0.0/24
